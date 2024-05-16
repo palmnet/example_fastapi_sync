@@ -16,7 +16,13 @@ executor = ThreadPoolExecutor(max_workers=5)
 def sync_http_request():
     logging.info("Making a synchronous HTTP request")
     response = requests.get("http://localhost:8001/wait")
+    logging.info("Response received")
     return response.json()
+
+
+async def async_http_request():
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(executor, sync_http_request)
 
 
 @app.get("/")
@@ -31,6 +37,12 @@ async def read_root():
 @app.get("/sync")
 async def read_sync():
     sync_http_request()
+
+
+@app.get("/fire")
+async def fire_sync():
+    asyncio.create_task(async_http_request())
+    return {"message": "Request has been fired off"}
 
 
 if __name__ == "__main__":
